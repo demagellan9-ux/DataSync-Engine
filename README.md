@@ -1,4 +1,4 @@
-# ETL Framework
+# DataSync Engine ETL Framework
 
 A local, profile-driven ETL pipeline that synchronises Excel workbooks, CSV files, and Google Sheets into MongoDB. Designed to run entirely on-premise with no admin rights and no inbound network tunnels.
 
