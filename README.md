@@ -45,7 +45,7 @@ mongodb-windows-x86_64-8.3.4/
 ├── start-mongodb.bat               # Start the local MongoDB server
 │
 ├── profiles/
-│   └── fc_stats_wais.json          # Active profile — edit this to configure everything
+│   └── Sample_sheet.json          # Active profile — edit this to configure everything
 │
 ├── etl_framework/
 │   ├── settings.py                 # Resolves active profile path (ETL_PROFILE env var)
