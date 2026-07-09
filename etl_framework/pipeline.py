@@ -88,6 +88,16 @@ def build_engine(profile: ProfileConfig) -> ETLEngine:
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
+def _collection_name(source_name: str) -> str:
+    """Derive the MongoDB collection name from the source file path.
+    Strips directory and extension so 'C:/data/FC Stats WAIS.xlsx' → 'FC Stats WAIS'.
+    Google Sheets sources use the spreadsheet ID as-is.
+    """
+    from pathlib import Path
+    stem = Path(source_name).stem
+    return stem if stem else source_name
+
+
 def _source_chunk_size(profile: ProfileConfig) -> int:
     """
     Return the effective chunk_size for this cycle.
@@ -110,7 +120,7 @@ def _accumulate(agg, result) -> None:
 
 # ── Parallel path (chunk_size == 0) ───────────────────────────────────────────
 
-def _run_sheet(sheet, engine, destination, workbook, imported_at) -> tuple:
+def _run_sheet(sheet, engine, destination, workbook, imported_at, collection) -> tuple:
     """
     Process and load one full sheet in a ThreadPoolExecutor worker.
     Engine reads only immutable config; MongoDBConnector uses a shared thread-safe
@@ -118,17 +128,17 @@ def _run_sheet(sheet, engine, destination, workbook, imported_at) -> tuple:
     Returns (LoadResult, n_invalid) for cycle-level aggregation.
     """
     valid_docs, invalid_docs = engine.process_sheet(sheet, workbook, imported_at)
-    result = destination.load(valid_docs, collection="records")
+    result = destination.load(valid_docs, collection=collection)
     if invalid_docs:
         destination.load(invalid_docs, collection="validation_errors")
     return result, len(invalid_docs)
 
 
 def _run_parallel(sheets, engine, destination, workbook, imported_at,
-                  max_workers) -> tuple:
+                  max_workers, collection) -> tuple:
     """Fan out full sheets to a thread pool. Returns (aggregate LoadResult, total_invalid)."""
     from etl_framework.models import LoadResult as _LR
-    agg           = _LR(total=0, collection="records")
+    agg           = _LR(total=0, collection=collection)
     total_invalid = 0
     # max_workers=0 → pass None, letting ThreadPoolExecutor auto-size.
     workers = max_workers or None
@@ -136,7 +146,7 @@ def _run_parallel(sheets, engine, destination, workbook, imported_at,
     with ThreadPoolExecutor(max_workers=workers) as pool:
         futures = {
             pool.submit(_run_sheet, sheet, engine, destination,
-                        workbook, imported_at): sheet.name
+                        workbook, imported_at, collection): sheet.name
             for sheet in sheets
         }
         for future in as_completed(futures):
@@ -150,7 +160,7 @@ def _run_parallel(sheets, engine, destination, workbook, imported_at,
 # ── Chunked path (chunk_size > 0) ─────────────────────────────────────────────
 
 def _run_chunked(source, engine, destination, workbook, imported_at,
-                 chunk_size) -> tuple:
+                 chunk_size, collection) -> tuple:
     """
     Stream all sheets in row-level chunks, processing and loading each chunk
     immediately to keep peak memory bounded at O(chunk_size) rows.
@@ -168,7 +178,7 @@ def _run_chunked(source, engine, destination, workbook, imported_at,
     chunk_size>0 + max_workers=1 for memory. Both can coexist in different profiles.
     """
     from etl_framework.models import LoadResult as _LR
-    agg             = _LR(total=0, collection="records")
+    agg             = _LR(total=0, collection=collection)
     total_invalid   = 0
     valid_offsets:   dict[str, int] = {}
     invalid_offsets: dict[str, int] = {}
@@ -182,7 +192,7 @@ def _run_chunked(source, engine, destination, workbook, imported_at,
             chunk, workbook, imported_at, v_off, i_off,
         )
 
-        result = destination.load(valid_docs, collection="records")
+        result = destination.load(valid_docs, collection=collection)
         if invalid_docs:
             destination.load(invalid_docs, collection="validation_errors")
 
@@ -203,6 +213,7 @@ def run_etl(profile: ProfileConfig, trigger: str = "scheduled") -> None:
     destination = build_destination(profile)
     engine      = build_engine(profile)
     chunk_size  = _source_chunk_size(profile)
+    collection  = _collection_name(source.source_name)
 
     audit("etl_start", workbook=source.source_name, trigger=trigger)
 
@@ -220,7 +231,7 @@ def run_etl(profile: ProfileConfig, trigger: str = "scheduled") -> None:
               trigger=f"chunked/chunk_size={chunk_size}")
         agg, total_invalid = _run_chunked(
             source, engine, destination,
-            source.source_name, imported_at, chunk_size,
+            source.source_name, imported_at, chunk_size, collection,
         )
     else:
         # Speed-optimised path: load all sheets up front, fan out to thread pool.
@@ -234,7 +245,7 @@ def run_etl(profile: ProfileConfig, trigger: str = "scheduled") -> None:
         agg, total_invalid = _run_parallel(
             sheets, engine, destination,
             source.source_name, imported_at,
-            workers,
+            workers, collection,
         )
 
     audit(
