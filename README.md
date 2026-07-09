@@ -27,7 +27,7 @@ A local, profile-driven ETL pipeline that synchronises Excel workbooks, CSV file
 | pandas + openpyxl | Excel and CSV reading |
 | pymongo | MongoDB driver |
 | watchdog | Excel file-save event detection |
-| MongoDB 6+ | Destination database (zip install, no admin required) |
+| MongoDB 6+ | Destination database |
 
 Install into your conda environment:
 
