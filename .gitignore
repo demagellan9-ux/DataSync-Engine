@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+
+# Runtime output
+logs/
+
+# Source data — keep private
+*.xlsx
+*.csv
+*.xls
+
+# Credentials
+service_account.json
+*.key
+
+# Environment
+.env
+
+# Real profiles — only example.json is committed
+profiles/*.json
+!profiles/example.json
+
+# MongoDB binaries and data
+mongodb-win32*/
+data/
+log/
+
+# Excel lock files
+~$*
+
+# Legacy single-file script
+etl_pipeline.py
+
+# Dead config
+etl_framework/config.py

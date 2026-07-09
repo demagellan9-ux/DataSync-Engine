@@ -1,0 +1,108 @@
+{
+  "profile_name": "example",
+  "description": "Generic starter profile — copy this file, rename it, and fill in your values",
+
+  "source": {
+    "type": "excel",
+    "excel": {
+      "path": "your_workbook.xlsx",
+      "chunk_size": 0
+    },
+    "google_sheets": {
+      "spreadsheet_id": "YOUR_SPREADSHEET_ID",
+      "service_account_json": "service_account.json"
+    },
+    "csv": {
+      "path": "your_file.csv",
+      "sheet_name": "csv",
+      "encoding": "utf-8",
+      "chunk_size": 0
+    }
+  },
+
+  "destination": {
+    "type": "mongodb",
+    "mongodb": {
+      "uri": "mongodb://localhost:27017/",
+      "database": "your_database_name",
+      "timeout_ms": 5000,
+      "batch_size": 500
+    }
+  },
+
+  "engine": {
+    "upsert_key_candidates": [
+      "ID",
+      "Employee ID",
+      "Record ID",
+      "Case ID",
+      "Ticket ID",
+      "Reference No",
+      "Transaction ID"
+    ],
+
+    "column_aliases": {
+      "Emp ID":      "Employee ID",
+      "EID":         "Employee ID",
+      "Full Name":   "Agent Name",
+      "Name":        "Agent Name",
+      "Date":        "Transaction Date"
+    },
+
+    "column_transforms": {
+      "Employee ID":      "string",
+      "Agent Name":       "trim",
+      "Transaction Date": "datetime",
+      "Score":            "float",
+      "Age":              "integer",
+      "Salary":           "currency",
+      "CSAT":             "percentage",
+      "Status":           "uppercase"
+    },
+
+    "column_validations": {
+      "Employee ID": [
+        { "rule": "required" }
+      ],
+      "Agent Name": [
+        { "rule": "required" }
+      ],
+      "Score": [
+        { "rule": "numeric" },
+        { "rule": "min", "value": 0 },
+        { "rule": "max", "value": 100 }
+      ],
+      "Age": [
+        { "rule": "numeric" },
+        { "rule": "min", "value": 18 },
+        { "rule": "max", "value": 65 }
+      ],
+      "Status": [
+        { "rule": "allowed_values", "values": ["ACTIVE", "INACTIVE", "PENDING"] }
+      ]
+    }
+  },
+
+  "orchestration": {
+    "poll_interval_seconds": 60,
+    "excel_debounce_seconds": 3
+  },
+
+  "performance": {
+    "parallel_processing": true,
+    "worker_count": 4,
+    "streaming": false,
+    "chunk_size": 0,
+    "batch_size": 500,
+    "connection_pooling": {
+      "max_pool_size": 10,
+      "min_pool_size": 1,
+      "max_idle_time_ms": 30000
+    }
+  },
+
+  "logging": {
+    "log_dir": "logs",
+    "file_retention_days": 90
+  }
+}
