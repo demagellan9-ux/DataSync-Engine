@@ -73,7 +73,7 @@ mongodb-windows-x86_64-8.3.4/
 │       └── sanitizer.py            # NaN / None cleanup before transform
 │
 ├── logs/                           # Created automatically on first run
-└── FC Stats WAIS.xlsx              # Source workbook (place here before running)
+└── Sample_Sheet.xlsx              # Source workbook (place here before running)
 ```
 
 ---
@@ -118,7 +118,7 @@ python -m etl_framework.pipeline
 ```
 
 On startup the pipeline:
-1. Loads `profiles/fc_stats_wais.json`
+1. Loads `profiles/Sample_Sheet.json`
 2. Runs one full ETL cycle immediately
 3. Watches the Excel file for saves and re-syncs automatically on every change
 
@@ -128,7 +128,7 @@ Stop with `Ctrl+C`.
 
 ## Profile reference
 
-All configuration lives in `profiles/fc_stats_wais.json`. The sections are:
+All configuration lives in `profiles/Sample_Sheet.json`. The sections are:
 
 ### `source`
 
@@ -136,7 +136,7 @@ All configuration lives in `profiles/fc_stats_wais.json`. The sections are:
 "source": {
   "type": "excel",          // "excel" | "csv" | "google_sheets"
   "excel": {
-    "path": "FC Stats WAIS.xlsx",
+    "path": "Sample_Sheet.xlsx",
     "chunk_size": 0         // 0 = full load; >0 = row-by-row streaming
   }
 }
@@ -149,7 +149,7 @@ All configuration lives in `profiles/fc_stats_wais.json`. The sections are:
   "type": "mongodb",
   "mongodb": {
     "uri": "mongodb://localhost:27017/",
-    "database": "fc_stats_wais",
+    "database": "Sample_Sheet",
     "timeout_ms": 5000,
     "batch_size": 500       // rows per bulk_write call (legacy fallback)
   }
@@ -283,8 +283,8 @@ Invalid rows are written to the `validation_errors` collection with an added `va
 Daily log files are written to `logs/YYYY-MM-DD.log`. Each line is a structured audit event:
 
 ```
-2026-07-09T08:00:01Z | INFO     | event=etl_start | workbook=FC Stats WAIS.xlsx | trigger=startup
+2026-07-09T08:00:01Z | INFO     | event=etl_start | workbook=Sample_Sheet.xlsx | trigger=startup
 2026-07-09T08:00:02Z | INFO     | event=transform_complete | sheet=Sheet1 | rows_total=500 | rows_valid=498 | rows_invalid=2 | elapsed_ms=120
 2026-07-09T08:00:02Z | INFO     | event=load_complete | sheet=records | rows_total=498 | inserted=12 | updated=3 | skipped=483 | elapsed_ms=45
-2026-07-09T08:00:02Z | INFO     | event=etl_complete | workbook=FC Stats WAIS.xlsx | inserted=12 | updated=3 | skipped=483 | elapsed_ms=310
+2026-07-09T08:00:02Z | INFO     | event=etl_complete | workbook=Sample_Sheet.xlsx | inserted=12 | updated=3 | skipped=483 | elapsed_ms=310
 ```
