@@ -107,7 +107,7 @@ pip install pandas openpyxl pymongo watchdog
 Copy your Excel workbook into the project root so the path matches the profile:
 
 ```
-mongodb-windows-x86_64-8.3.4\FC Stats WAIS.xlsx
+mongodb-windows-x86_64-8.3.4\Sample_Sheet.xlsx
 ```
 
 ### 5. Run the pipeline
