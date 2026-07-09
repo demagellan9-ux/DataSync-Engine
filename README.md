@@ -258,7 +258,7 @@ Every record is stored in the `records` collection with this shape:
 ```json
 {
   "_meta": {
-    "workbook":    "FC Stats WAIS.xlsx",
+    "workbook":    "SAMPLE_SHEET.xlsx",
     "sheet":       "Sheet1",
     "row_number":  2,
     "imported_at": "2026-07-09T08:00:00+00:00",
